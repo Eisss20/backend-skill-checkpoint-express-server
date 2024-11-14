@@ -1,10 +1,11 @@
 import { Router } from "express";
 import connectionPool from "../utils/db.mjs";
+import validateQuestion from "../middleware/question.validatetion.mjs";
 
 const questionRouter = Router()
 
 
-questionRouter.post("/", async (req, res) => {
+  questionRouter.post("/", validateQuestion, async (req, res) => {
     const addNewQuestions = req.body;
   
     // console.log("Request Body:", addNewQuestions);
@@ -20,19 +21,17 @@ questionRouter.post("/", async (req, res) => {
         addNewQuestions.description,
         addNewQuestions.category,
       ];
-  
       // console.log("Values to Insert:", valuesAddNewQuestion);
   
-      // รันคำสั่ง SQL
+
       await connectionPool.query(queryNewQuestion, valuesAddNewQuestion);
   
-      // ส่ง response กลับเมื่อสร้างข้อมูลสำเร็จ
       return res.status(201).json({
         message: "Question created successfully",
       });
     } catch (error) {
       if (error.message === "Invalid data") {
-        return res.status(400).json({ message: "Invalid request data" });
+        return res.status(401).json({ message: "Invalid request data" });
       } else {
         return res.status(500).json({ message: "Unable to create question." });
       }
@@ -41,7 +40,6 @@ questionRouter.post("/", async (req, res) => {
   
   questionRouter.get("/", async (req, res) => {
     let displayAllQuestions;
-  
     try {
       displayAllQuestions = await connectionPool.query("SELECT * FROM questions");
       return res.status(200).json({
@@ -57,8 +55,7 @@ questionRouter.post("/", async (req, res) => {
   
   questionRouter.get("/search", async (req, res) => {
     const { title, category } = req.query;
-  
-    // ตรวจสอบว่าเป็น param query หรือไม่ 
+   
     if (!title && !category) {
       return res.status(400).json({
         message: "Invalid search parameters.",
@@ -120,7 +117,7 @@ questionRouter.post("/", async (req, res) => {
     }
   });
   
-  questionRouter.put("/:questionId", async (req, res) => {
+  questionRouter.put ("/:questionId", validateQuestion, async (req, res) => {
     const questionId = req.params.questionId;
     const updateQuestions = { ...req.body };
   
@@ -132,7 +129,7 @@ questionRouter.post("/", async (req, res) => {
             category = $3
         WHERE id = $4  
       `;
-      /// where 4 =  id
+
   
       const valuesUpdateQuestion = [
         updateQuestions.title,
